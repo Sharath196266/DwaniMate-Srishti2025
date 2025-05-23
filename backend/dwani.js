@@ -1,12 +1,12 @@
 import axios from "axios";
 
 // Replace with your actual Dwani API key
-const DWANI_API_KEY = "YOUR_DWANI_API_KEY";
+const DWANI_API_KEY = "mshemanth15112003@gmail.com_dwani_vishnuvardhana";
 
 export const useDwaniAPI = async (message) => {
   try {
     const response = await axios.post(
-      "https://api.dwani.ai/kannada-chat",
+      "https://dwani-vishnuvardhana.hf.space",
       { input: message },
       {
         headers: {
