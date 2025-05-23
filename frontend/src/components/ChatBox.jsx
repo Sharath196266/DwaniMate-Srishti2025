@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { FaPaperPlane, FaMicrophone, FaPaperclip } from "react-icons/fa";
 
 const ChatBox = () => {
   const [input, setInput] = useState("");
@@ -8,7 +9,6 @@ const ChatBox = () => {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
     const userMsg = { sender: "user", text: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
     setChat(prev => [...prev, userMsg]);
     setInput("");
@@ -31,43 +31,53 @@ const ChatBox = () => {
   }, [chat]);
 
   return (
-    <div className="max-w-md mx-auto mt-10 border rounded shadow-lg flex flex-col h-[36rem] bg-white">
+    <div className="w-full max-w-md mx-auto h-[100vh] flex flex-col bg-[#f0f0f0] shadow-md">
+      
       {/* Header */}
-      <div className="bg-green-600 text-white py-3 px-4 font-semibold text-lg rounded-t flex items-center">
-        <span className="rounded-full bg-white text-green-600 w-8 h-8 flex items-center justify-center mr-2">🤖</span>
-        Kannada ChatBot
+      <div className="bg-[#075e54] text-white flex items-center p-3 space-x-3">
+        <img src="https://via.placeholder.com/40" className="w-10 h-10 rounded-full" alt="Profile" />
+        <div>
+          <div className="font-semibold">KannadaBot</div>
+          <div className="text-xs text-green-100">online</div>
+        </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 p-4 overflow-y-auto bg-[#e5ddd5]">
+      <div className="flex-1 overflow-y-auto bg-[#e5ddd5] p-3">
         {chat.map((msg, index) => (
-          <div key={index} className={`flex mb-2 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`relative max-w-[75%] px-3 py-2 text-sm rounded-xl shadow
+          <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[80%] px-3 py-2 text-sm rounded-xl shadow relative
               ${msg.sender === "user" ? "bg-[#dcf8c6] rounded-br-none" : "bg-white rounded-bl-none"}`}>
-              <div>{msg.text}</div>
-              <div className="text-[10px] text-gray-600 text-right mt-1">{msg.time}</div>
+              {msg.text}
+              <div className="text-[10px] text-gray-500 text-right mt-1">{msg.time}</div>
             </div>
           </div>
         ))}
         <div ref={chatEndRef}></div>
       </div>
 
-      {/* Input */}
-      <div className="flex p-2 bg-white border-t border-gray-200">
+      {/* Input Area */}
+      <div className="flex items-center p-2 bg-white border-t border-gray-300">
+        <button className="text-gray-600 px-2">
+          <FaPaperclip size={18} />
+        </button>
         <input
+          className="flex-1 mx-2 px-3 py-2 text-sm border rounded-full border-gray-300 focus:outline-none"
           type="text"
-          placeholder="Type a message"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-sm focus:outline-none"
+          placeholder="Message"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
-        <button
-          onClick={sendMessage}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-r-md text-sm"
-        >
-          Send
-        </button>
+        {input.trim() ? (
+          <button onClick={sendMessage} className="text-green-600 px-2">
+            <FaPaperPlane size={18} />
+          </button>
+        ) : (
+          <button className="text-gray-600 px-2">
+            <FaMicrophone size={18} />
+          </button>
+        )}
       </div>
     </div>
   );
