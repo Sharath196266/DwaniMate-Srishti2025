@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import dwani
+import google.generativeai as genai
 
 dwani.api_key = os.getenv("DWANI_API_KEY")
 dwani.api_base = os.getenv("DWANI_API_BASE_URL")
@@ -13,6 +14,12 @@ CORS(app)
 def api_chat():
     prompt = request.json.get("message", "")
     try:
+        
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        chat = model.start_chat()
+        gemini_response = chat.send_message(f"{prompt} and in answer dont use special symbols and give simple answer")
+        gemini_text = gemini_response.text.strip()
+
         response = dwani.Chat.create(prompt=prompt, src_lang="eng_Latn", tgt_lang="kan_Knda")
         reply_text = response.get("response", "No response")
 

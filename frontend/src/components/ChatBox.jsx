@@ -1,28 +1,58 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { FaPaperPlane, FaMicrophone, FaPaperclip } from "react-icons/fa";
+import { FaPaperPlane, FaPaperclip } from "react-icons/fa";
 
 const ChatBox = () => {
   const [input, setInput] = useState("");
+  const [image, setImage] = useState(null);
   const [chat, setChat] = useState([]);
   const chatEndRef = useRef(null);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
-    const userMsg = { sender: "user", text: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-    setChat(prev => [...prev, userMsg]);
+    if (!input.trim() && !image) return;
+
+    const userMsg = {
+      sender: "user",
+      text: input || "📷 Image",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+    setChat((prev) => [...prev, userMsg]);
+
+    const payload = { message: input };
+    if (image) payload.image = image;
+
     setInput("");
+    setImage(null);
 
     try {
-      const res = await axios.post("http://localhost:3001/api/chat", { message: input });
-      const botMsg = { sender: "bot", text: res.data.reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-      setChat(prev => [...prev, botMsg]);
+      const res = await axios.post("http://localhost:3001/api/chat", payload);
+      const botMsg = {
+        sender: "bot",
+        text: res.data.reply,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setChat((prev) => [...prev, botMsg]);
 
-      const audio = new Audio(res.data.audioUrl);
-      audio.play();
+      if (res.data.audioUrl) {
+        const audio = new Audio(res.data.audioUrl);
+        audio.play();
+      }
     } catch (err) {
-      const errorMsg = { sender: "bot", text: "⚠️ Error connecting to backend.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-      setChat(prev => [...prev, errorMsg]);
+      const errorMsg = {
+        sender: "bot",
+        text: "⚠️ Error connecting to backend.",
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setChat((prev) => [...prev, errorMsg]);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setImage(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -31,53 +61,65 @@ const ChatBox = () => {
   }, [chat]);
 
   return (
-    <div className="w-full max-w-md mx-auto h-[100vh] flex flex-col bg-[#f0f0f0] shadow-md">
-      
-      {/* Header */}
-      <div className="bg-[#075e54] text-white flex items-center p-3 space-x-3">
-        <img src="https://via.placeholder.com/40" className="w-10 h-10 rounded-full" alt="Profile" />
+    <div className="chat-container">
+      <div className="chat-header">
+        <img src="/vite.svg" alt="Logo" />
         <div>
-          <div className="font-semibold">KannadaBot</div>
-          <div className="text-xs text-green-100">online</div>
+          <div className="chat-header-title">ದ್ವನಿಮಿತ್ರ</div>
+          <div className="chat-header-sub">Online</div>
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto bg-[#e5ddd5] p-3">
+      <div className="chat-body">
         {chat.map((msg, index) => (
-          <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] px-3 py-2 text-sm rounded-xl shadow relative
-              ${msg.sender === "user" ? "bg-[#dcf8c6] rounded-br-none" : "bg-white rounded-bl-none"}`}>
-              {msg.text}
-              <div className="text-[10px] text-gray-500 text-right mt-1">{msg.time}</div>
-            </div>
+          <div key={index} className={`message ${msg.sender}`}>
+            {msg.text}
+            <div className="message-time">{msg.time}</div>
           </div>
         ))}
         <div ref={chatEndRef}></div>
       </div>
 
-      {/* Input Area */}
-      <div className="flex items-center p-2 bg-white border-t border-gray-300">
-        <button className="text-gray-600 px-2">
-          <FaPaperclip size={18} />
-        </button>
+      <div className="chat-footer">
+        {/* Hidden file input for image upload */}
         <input
-          className="flex-1 mx-2 px-3 py-2 text-sm border rounded-full border-gray-300 focus:outline-none"
-          type="text"
-          placeholder="Message"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          type="file"
+          id="imageUpload"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={handleImageUpload}
         />
-        {input.trim() ? (
-          <button onClick={sendMessage} className="text-green-600 px-2">
-            <FaPaperPlane size={18} />
-          </button>
+
+        {/* Show text input only if no image */}
+        {!image ? (
+          <input
+            type="text"
+            placeholder="Message"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
         ) : (
-          <button className="text-gray-600 px-2">
-            <FaMicrophone size={18} />
+          <div className="image-preview">📷 Image selected</div>
+        )}
+
+        {/* Attachment icon - disabled if image is selected */}
+        {!image && (
+          <label htmlFor="imageUpload" style={{ cursor: "pointer", color: "#1a73e8", fontSize: 20 }}>
+            <FaPaperclip />
+          </label>
+        )}
+
+        {/* Deselect image button */}
+        {image && (
+          <button onClick={() => setImage(null)} style={{ color: "red", fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>
+            ✖
           </button>
         )}
+
+        <button onClick={sendMessage} style={{ color: "#1a73e8", fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>
+          <FaPaperPlane />
+        </button>
       </div>
     </div>
   );
